@@ -2,7 +2,8 @@
 
 import requests  # to connect to web pages
 from bs4 import BeautifulSoup  # to extract information from html
-import pandas as pd  # to manipulate data and export to csv format
+# import pandas as pd  # to manipulate data and export to csv format
+import re
 
 
 def get_synopsis(soup):
@@ -50,9 +51,27 @@ def get_idiom(soup):
         return None
 
 
+def compute_minutes(text):
+    """Compute minutes from a string in format [0-9]h[0-9]min."""
+    regex = r"\d+"
+    result = re.findall(regex, text)
+    duration = None
+    if text.find('h') != -1 and text.find('min') != -1:
+        duration = int(result[0])*60 + int(result[1])
+    elif text.find('h') != -1 and text.find('min') == -1:
+        duration = int(result[0])*60
+    elif text.find('h') == -1 and text.find('min') != -1:
+        duration = int(result[0])
+    return duration
+
+
 def get_duration(soup):
     """Get duration info."""
-    pass
+    duration_text = soup.find('div', attrs={'class': 'subtext'}).find('time')
+    if duration_text is not None:
+        return compute_minutes(duration_text.text)
+    else:
+        return None
 
 
 def get_score(soup):
@@ -106,3 +125,6 @@ print(country)
 
 idiom = get_idiom(soup)
 print(idiom)
+
+duration = get_duration(soup)
+print("Duration ", duration)
